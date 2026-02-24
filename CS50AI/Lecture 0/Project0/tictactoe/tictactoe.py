@@ -14,9 +14,7 @@ def initial_state():
     """
     Returns starting state of the board.
     """
-    return [[EMPTY, EMPTY, EMPTY],
-            [EMPTY, EMPTY, EMPTY],
-            [EMPTY, EMPTY, EMPTY]]
+    return [[EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY], [EMPTY, EMPTY, EMPTY]]
 
 
 def player(board):
@@ -27,6 +25,7 @@ def player(board):
         return O
     else:
         return X
+
 
 def actions(board):
     """
@@ -39,6 +38,7 @@ def actions(board):
                 actions.add((row, col))
     return actions
 
+
 def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
@@ -48,13 +48,14 @@ def result(board, action):
 
     row, col = action
 
+    if not (0 <= row < len(board) and 0 <= col < len(board[row])):
+        raise Exception("Invalid Move")
     if board[row][col] is not EMPTY:
         raise Exception("Invalid Move")
 
     new_board = copy.deepcopy(board)
     new_board[row][col] = player(board)
     return new_board
-
 
 
 def winner(board):
@@ -69,7 +70,7 @@ def winner(board):
         [(0, 1), (1, 1), (2, 1)],
         [(0, 2), (1, 2), (2, 2)],
         [(0, 0), (1, 1), (2, 2)],
-        [(0, 2), (1, 1), (2, 0)]
+        [(0, 2), (1, 1), (2, 0)],
     ]
 
     for winCondition in winConditions:
@@ -149,5 +150,3 @@ def minimax(board):
                 best_action = action
 
     return best_action
-
-
