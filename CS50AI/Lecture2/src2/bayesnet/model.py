@@ -1,55 +1,58 @@
-from pomegranate import *
+from pomegranate.distributions import Categorical, ConditionalCategorical
+from pomegranate.bayesian_network import BayesianNetwork
+import torch
 
-# Rain node has no parents
-rain = Node(DiscreteDistribution({
-    "none": 0.7,
-    "light": 0.2,
-    "heavy": 0.1
-}), name="rain")
+# Rain: 0=none, 1=light, 2=heavy
+rain = Categorical([[0.7, 0.2, 0.1]])
 
-# Track maintenance node is conditional on rain
-maintenance = Node(ConditionalProbabilityTable([
-    ["none", "yes", 0.4],
-    ["none", "no", 0.6],
-    ["light", "yes", 0.2],
-    ["light", "no", 0.8],
-    ["heavy", "yes", 0.1],
-    ["heavy", "no", 0.9]
-], [rain.distribution]), name="maintenance")
+# Maintenance: 0=yes, 1=no
+maintenance = ConditionalCategorical(
+    [
+        [
+            [0.4, 0.6],  # rain=none
+            [0.2, 0.8],  # rain=light
+            [0.1, 0.9],
+        ]  # rain=heavy
+    ]
+)
 
-# Train node is conditional on rain and maintenance
-train = Node(ConditionalProbabilityTable([
-    ["none", "yes", "on time", 0.8],
-    ["none", "yes", "delayed", 0.2],
-    ["none", "no", "on time", 0.9],
-    ["none", "no", "delayed", 0.1],
-    ["light", "yes", "on time", 0.6],
-    ["light", "yes", "delayed", 0.4],
-    ["light", "no", "on time", 0.7],
-    ["light", "no", "delayed", 0.3],
-    ["heavy", "yes", "on time", 0.4],
-    ["heavy", "yes", "delayed", 0.6],
-    ["heavy", "no", "on time", 0.5],
-    ["heavy", "no", "delayed", 0.5],
-], [rain.distribution, maintenance.distribution]), name="train")
+# Train: 0=on time, 1=delayed
+train = ConditionalCategorical(
+    [
+        [
+            [
+                [0.8, 0.2],  # rain=none, maintenance=yes
+                [0.9, 0.1],
+            ],  # rain=none, maintenance=no
+            [
+                [0.6, 0.4],  # rain=light, maintenance=yes
+                [0.7, 0.3],
+            ],  # rain=light, maintenance=no
+            [
+                [0.4, 0.6],  # rain=heavy, maintenance=yes
+                [0.5, 0.5],
+            ],
+        ]  # rain=heavy, maintenance=no
+    ]
+)
 
-# Appointment node is conditional on train
-appointment = Node(ConditionalProbabilityTable([
-    ["on time", "attend", 0.9],
-    ["on time", "miss", 0.1],
-    ["delayed", "attend", 0.6],
-    ["delayed", "miss", 0.4]
-], [train.distribution]), name="appointment")
+# Appointment: 0=attend, 1=miss
+appointment = ConditionalCategorical(
+    [
+        [
+            [0.9, 0.1],  # train=on time
+            [0.6, 0.4],
+        ]  # train=delayed
+    ]
+)
 
-# Create a Bayesian Network and add states
 model = BayesianNetwork()
-model.add_states(rain, maintenance, train, appointment)
-
-# Add edges connecting nodes
+model.add_distributions([rain, maintenance, train, appointment])
 model.add_edge(rain, maintenance)
 model.add_edge(rain, train)
 model.add_edge(maintenance, train)
 model.add_edge(train, appointment)
 
-# Finalize model
-model.bake()
+# Query: [rain, maintenance, train, appointment], -1 = unknown
+X = torch.tensor([[2, -1, -1, 1]], dtype=torch.int32)  # rain=heavy, appointment=miss
+print(model.probability(X))

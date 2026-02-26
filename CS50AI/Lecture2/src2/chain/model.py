@@ -1,21 +1,25 @@
-from pomegranate import *
+from pomegranate.markov_chain import MarkovChain
+from pomegranate.distributions import Categorical, ConditionalCategorical
 
-# Define starting probabilities
-start = DiscreteDistribution({
-    "sun": 0.5,
-    "rain": 0.5
-})
+# States: 0=sun, 1=rain
+labels = ["sun", "rain"]
 
-# Define transition model
-transitions = ConditionalProbabilityTable([
-    ["sun", "sun", 0.8],
-    ["sun", "rain", 0.2],
-    ["rain", "sun", 0.3],
-    ["rain", "rain", 0.7]
-], [start])
+# Starting probabilities
+start = Categorical([[0.5, 0.5]])
+
+# Transition model
+transitions = ConditionalCategorical(
+    [
+        [
+            [0.8, 0.2],  # sun -> sun, sun -> rain
+            [0.3, 0.7],
+        ]  # rain -> sun, rain -> rain
+    ]
+)
 
 # Create Markov chain
 model = MarkovChain([start, transitions])
 
 # Sample 50 states from chain
-print(model.sample(50))
+samples = model.sample(50).tolist()
+print([labels[sample[0][0]] for sample in samples])
