@@ -11,7 +11,6 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")
     corpus = crawl(sys.argv[1])
-    transition_model(corpus, "2.html", 0.85)
     ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
     print(f"PageRank Results from Sampling (n = {SAMPLES})")
     for page in sorted(ranks):
@@ -76,7 +75,17 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    return {}
+    page_visits = {filename: 0 for filename in corpus}
+    current_page = random.choice(list(corpus.keys()))
+
+    for i in range(n):
+        page_visits[current_page] += 1
+        probability_distribution = transition_model(corpus, current_page, damping_factor)
+        pages = list(probability_distribution.keys())
+        weights = list(probability_distribution.values())
+        current_page = random.choices(pages, weights=weights, k=1)[0]
+
+    return {key: value / n for key, value in page_visits.items()}
 
 def iterate_pagerank(corpus, damping_factor):
     """
@@ -87,7 +96,22 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    return {}
+
+    pageranks = {key: 1 / len(corpus) for key in corpus.keys()}
+    # print(base_distribution)
+
+    while True:
+        new_pageranks = {}
+        for page in corpus:
+            new_pageranks[page] = (1 - damping_factor) / len(corpus)
+            for link in corpus[page]:
+                new_pageranks[page] += damping_factor * (pageranks[link] / len(corpus[link]))
+
+        if all(abs(new_pageranks[page] - pageranks[page]) < 0.001 for page in corpus):
+            break
+        pageranks = new_pageranks
+
+    return pageranks
 
 
 if __name__ == "__main__":
