@@ -16,7 +16,7 @@ def main():
     for page in sorted(ranks):
         print(f"  {page}: {ranks[page]:.4f}")
     ranks = iterate_pagerank(corpus, DAMPING)
-    print(f"PageRank Results from Iteration")
+    print("PageRank Results from Iteration")
     for page in sorted(ranks):
         print(f"  {page}: {ranks[page]:.4f}")
 
@@ -40,10 +40,7 @@ def crawl(directory):
 
     # Only include links to other pages in the corpus
     for filename in pages:
-        pages[filename] = set(
-            link for link in pages[filename]
-            if link in pages
-        )
+        pages[filename] = set(link for link in pages[filename] if link in pages)
 
     return pages
 
@@ -61,10 +58,13 @@ def transition_model(corpus, page, damping_factor):
     base_probability = (1 - damping_factor) / len(corpus)
     for filename in corpus:
         if filename in corpus[page]:
-            probability_distribution[filename] = base_probability + (damping_factor / len(corpus[page]))
+            probability_distribution[filename] = base_probability + (
+                damping_factor / len(corpus[page])
+            )
         else:
             probability_distribution[filename] = base_probability
     return probability_distribution
+
 
 def sample_pagerank(corpus, damping_factor, n):
     """
@@ -80,12 +80,15 @@ def sample_pagerank(corpus, damping_factor, n):
 
     for i in range(n):
         page_visits[current_page] += 1
-        probability_distribution = transition_model(corpus, current_page, damping_factor)
+        probability_distribution = transition_model(
+            corpus, current_page, damping_factor
+        )
         pages = list(probability_distribution.keys())
         weights = list(probability_distribution.values())
         current_page = random.choices(pages, weights=weights, k=1)[0]
 
     return {key: value / n for key, value in page_visits.items()}
+
 
 def iterate_pagerank(corpus, damping_factor):
     """
@@ -97,6 +100,10 @@ def iterate_pagerank(corpus, damping_factor):
     PageRank values should sum to 1.
     """
 
+    for page in corpus:
+        if len(corpus[page]) == 0:
+            corpus[page] = set(corpus.keys())
+
     pageranks = {key: 1 / len(corpus) for key in corpus.keys()}
     # print(base_distribution)
 
@@ -104,9 +111,11 @@ def iterate_pagerank(corpus, damping_factor):
         new_pageranks = {}
         for page in corpus:
             new_pageranks[page] = (1 - damping_factor) / len(corpus)
-            for link in corpus[page]:
-                new_pageranks[page] += damping_factor * (pageranks[link] / len(corpus[link]))
-
+            for linking_page in corpus:
+                if page in corpus[linking_page]:
+                    new_pageranks[page] += damping_factor * (
+                        pageranks[linking_page] / len(corpus[linking_page])
+                    )
         if all(abs(new_pageranks[page] - pageranks[page]) < 0.001 for page in corpus):
             break
         pageranks = new_pageranks
@@ -116,5 +125,3 @@ def iterate_pagerank(corpus, damping_factor):
 
 if __name__ == "__main__":
     main()
-
-
