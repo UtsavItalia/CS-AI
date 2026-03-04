@@ -97,9 +97,14 @@ class CrosswordCreator():
         """
         Update `self.domains` such that each variable is node-consistent.
         (Remove any values that are inconsistent with a variable's unary
-         constraints; in this case, the length of the word.)
+        constraints; in this case, the length of the word.)
         """
-        raise NotImplementedError
+        #variable(i, j, direction, length)
+        for variable in self.domains:
+            for word in self.domains[variable].copy():
+                if len(word) != variable.length:
+                    self.domains[variable].remove(word)
+        print(self.domains)
 
     def revise(self, x, y):
         """
@@ -110,7 +115,7 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        raise NotImplementedError
+        pass
 
     def ac3(self, arcs=None):
         """
@@ -121,21 +126,21 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
+        pass
 
     def assignment_complete(self, assignment):
         """
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        raise NotImplementedError
+        pass
 
     def consistent(self, assignment):
         """
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        raise NotImplementedError
+        pass
 
     def order_domain_values(self, var, assignment):
         """
@@ -144,7 +149,7 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
-        raise NotImplementedError
+        pass
 
     def select_unassigned_variable(self, assignment):
         """
@@ -154,7 +159,7 @@ class CrosswordCreator():
         degree. If there is a tie, any of the tied variables are acceptable
         return values.
         """
-        raise NotImplementedError
+        pass
 
     def backtrack(self, assignment):
         """
@@ -165,7 +170,7 @@ class CrosswordCreator():
 
         If no assignment is possible, return None.
         """
-        raise NotImplementedError
+        pass
 
 
 def main():
