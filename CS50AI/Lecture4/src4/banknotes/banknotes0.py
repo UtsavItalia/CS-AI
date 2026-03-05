@@ -1,10 +1,7 @@
 import csv
 import random
 
-from sklearn import svm
-from sklearn.linear_model import Perceptron
 from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
 
 # model = Perceptron()
 # model = svm.SVC()
@@ -32,12 +29,12 @@ training = data[holdout:]
 # Train model on training set
 X_training = [row["evidence"] for row in training]
 y_training = [row["label"] for row in training]
-model.fit(X_training, y_training)
+model.fit(X_training, y_training) # type: ignore
 
 # Make predictions on the testing set
 X_testing = [row["evidence"] for row in testing]
 y_testing = [row["label"] for row in testing]
-predictions = model.predict(X_testing)
+predictions = model.predict(X_testing) # type: ignore
 
 # Compute how well we performed
 correct = 0
